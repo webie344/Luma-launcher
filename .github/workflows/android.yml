@@ -54,6 +54,13 @@ jobs:
             "platforms;android-35" \
             "build-tools;35.0.0"
 
+      - name: Remove invalid placeholder files
+        run: |
+          rm -f app/src/main/res/drawable/File
+          rm -f app/src/main/res/values/File
+          echo "Checking remaining extensionless File entries:"
+          find app/src/main/res -type f -name 'File' -print
+
       - name: Build debug APK
         run: |
           chmod +x gradlew
