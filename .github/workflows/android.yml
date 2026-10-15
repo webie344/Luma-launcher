@@ -29,17 +29,30 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Install Android SDK
+      - name: Install Android command-line tools
         run: |
-          sudo apt-get update
-          sudo apt-get install -y android-sdk
-          echo "ANDROID_HOME=/usr/lib/android-sdk" >> "$GITHUB_ENV"
-          echo "/usr/lib/android-sdk/platform-tools" >> "$GITHUB_PATH"
+          export ANDROID_HOME="$RUNNER_TEMP/android-sdk"
+          mkdir -p "$ANDROID_HOME/cmdline-tools"
+          curl -fsSL \
+            https://dl.google.com/android/repository/commandlinetools-linux-12266719_latest.zip \
+            -o "$RUNNER_TEMP/android-tools.zip"
+          mkdir -p "$RUNNER_TEMP/android-tools"
+          unzip -q "$RUNNER_TEMP/android-tools.zip" \
+            -d "$RUNNER_TEMP/android-tools"
+          mv "$RUNNER_TEMP/android-tools/cmdline-tools" \
+            "$ANDROID_HOME/cmdline-tools/latest"
+          echo "ANDROID_HOME=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_HOME" >> "$GITHUB_ENV"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          echo "$ANDROID_HOME/platform-tools" >> "$GITHUB_PATH"
 
-      - name: Install required SDK packages
+      - name: Install Android SDK packages
         run: |
-          yes | sudo /usr/lib/android-sdk/cmdline-tools/bin/sdkmanager --licenses || true
-          sudo /usr/lib/android-sdk/cmdline-tools/bin/sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses || true
+          sdkmanager --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-35" \
+            "build-tools;35.0.0"
 
       - name: Build debug APK
         run: |
